@@ -5,3 +5,8 @@
 body {
   @apply bg-slate-100 text-slate-900 antialiased;
 }
+
+@keyframes grow {
+  from { width: 0%; }
+  to   { width: 100%; }
+}

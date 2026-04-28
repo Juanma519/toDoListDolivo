@@ -1,15 +1,27 @@
-import { useState, type FormEvent } from 'react';
+import { useState, useEffect, type FormEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { api } from '../api/api';
 import { getApiErrorMessage } from '../api/errors';
+import { useAuth } from '../context/AuthContext';
+import type { AuthResponse } from '../types';
+
+const REDIRECT_DELAY_MS = 2500;
 
 export function Register() {
   const navigate = useNavigate();
+  const { login } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [success, setSuccess] = useState(false);
+
+  useEffect(() => {
+    if (!success) return;
+    const timer = setTimeout(() => navigate('/tasks'), REDIRECT_DELAY_MS);
+    return () => clearTimeout(timer);
+  }, [success, navigate]);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -24,7 +36,10 @@ export function Register() {
 
     try {
       await api.post('/auth/register', { email, password });
-      navigate('/login');
+
+      const { data } = await api.post<AuthResponse>('/auth/login', { email, password });
+      login(data);
+      setSuccess(true);
     } catch (caughtError) {
       setError(getApiErrorMessage(caughtError, 'No se pudo crear la cuenta'));
     } finally {
@@ -39,6 +54,20 @@ export function Register() {
           <h1 className="text-3xl font-bold text-slate-900">Crear cuenta</h1>
           <p className="mt-2 text-sm text-slate-500">Registrate para gestionar tus tareas.</p>
         </div>
+
+        {success && (
+          <div className="mb-6 flex flex-col items-center gap-2 rounded-xl bg-emerald-50 px-4 py-4 text-center text-sm text-emerald-700">
+            <span className="text-2xl">✓</span>
+            <p className="font-semibold">¡Cuenta creada exitosamente!</p>
+            <p className="text-emerald-600">Iniciando sesión automáticamente...</p>
+            <div className="mt-1 h-1 w-full overflow-hidden rounded-full bg-emerald-200">
+              <div
+                className="h-full bg-emerald-500 rounded-full"
+                style={{ animation: `grow ${REDIRECT_DELAY_MS}ms linear forwards` }}
+              />
+            </div>
+          </div>
+        )}
 
         {error && (
           <div className="mb-4 rounded-lg bg-rose-50 px-4 py-3 text-sm text-rose-700">
@@ -57,7 +86,8 @@ export function Register() {
               value={email}
               onChange={(event) => setEmail(event.target.value)}
               required
-              className="w-full rounded-lg border border-slate-300 px-3 py-2 outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-100"
+              disabled={success}
+              className="w-full rounded-lg border border-slate-300 px-3 py-2 outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-100 disabled:bg-slate-50 disabled:text-slate-400"
               placeholder="tu@email.com"
             />
           </div>
@@ -73,7 +103,8 @@ export function Register() {
               onChange={(event) => setPassword(event.target.value)}
               minLength={6}
               required
-              className="w-full rounded-lg border border-slate-300 px-3 py-2 outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-100"
+              disabled={success}
+              className="w-full rounded-lg border border-slate-300 px-3 py-2 outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-100 disabled:bg-slate-50 disabled:text-slate-400"
               placeholder="Mínimo 6 caracteres"
             />
           </div>
@@ -89,14 +120,15 @@ export function Register() {
               onChange={(event) => setConfirmPassword(event.target.value)}
               minLength={6}
               required
-              className="w-full rounded-lg border border-slate-300 px-3 py-2 outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-100"
+              disabled={success}
+              className="w-full rounded-lg border border-slate-300 px-3 py-2 outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-100 disabled:bg-slate-50 disabled:text-slate-400"
               placeholder="Repetí tu contraseña"
             />
           </div>
 
           <button
             type="submit"
-            disabled={isSubmitting}
+            disabled={isSubmitting || success}
             className="w-full rounded-lg bg-sky-600 px-4 py-2 font-medium text-white transition hover:bg-sky-700 disabled:cursor-not-allowed disabled:bg-slate-400"
           >
             {isSubmitting ? 'Creando cuenta...' : 'Registrarme'}
