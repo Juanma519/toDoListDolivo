@@ -1,6 +1,6 @@
 # To-Do List Fullstack
 
-Aplicación fullstack para gestión de tareas con autenticación JWT. El repositorio está dividido en dos aplicaciones desacopladas:
+Aplicación fullstack para gestión de tareas con autenticación JWT. El repositorio está dividido en dos aplicaciones:
 
 - `backend/`: API REST con NestJS, Prisma y MySQL.
 - `frontend/`: SPA con React 18, TypeScript, Tailwind CSS, React Router y Axios.
@@ -15,11 +15,8 @@ La autenticación es stateless con JWT. Al iniciar sesión, el backend firma un 
 
 ## Decisiones técnicas
 
-**NestJS** se eligió por su arquitectura modular, inyección de dependencias, decorators y separación clara entre controllers, services, modules y guards.
 
-**Prisma** aporta type-safety, migraciones declarativas y una experiencia de desarrollo superior a escribir SQL manual para operaciones CRUD comunes.
-
-**SHA-256 con salt** se usa por requerimiento del proyecto. El salt único por usuario evita que dos usuarios con la misma contraseña tengan el mismo hash y reduce la efectividad de ataques con rainbow tables.
+**SHA-256 con salt** el salt único por usuario evita que dos usuarios con la misma contraseña tengan el mismo hash y reduce la efectividad de ataques con rainbow tables.
 
 **Context API** es suficiente para manejar sesión en esta app porque el estado global es pequeño: usuario autenticado, token, login y logout. Evita sumar Redux u otra dependencia innecesaria.
 
@@ -40,7 +37,6 @@ cd toDoListDolivo
 
 ### 2. Levantar MySQL con Docker Compose
 
-Este paso es opcional si ya tenés MySQL corriendo localmente.
 
 Primero creá el archivo `.env` de la raíz a partir del ejemplo:
 
@@ -48,7 +44,7 @@ Primero creá el archivo `.env` de la raíz a partir del ejemplo:
 copy .env.example .env
 ```
 
-El `docker-compose.yml` toma desde ese `.env` las credenciales de MySQL, por eso no quedan hardcodeadas en el archivo versionado.
+El `docker-compose.yml` toma desde ese `.env` las credenciales de MySQL.
 
 ```bash
 docker compose up -d
@@ -62,6 +58,7 @@ MYSQL_USER=todouser
 MYSQL_PASSWORD=todopassword_de_desarrollo
 MYSQL_DATABASE=tododb
 ```
+**Esos valores son de ejemplo
 
 ### 3. Configurar variables de entorno del backend
 
@@ -90,11 +87,21 @@ npm install
 npx prisma migrate dev --name init
 ```
 
-También podés regenerar el cliente Prisma manualmente:
+
+### 5.1. (Opcional) Cargar datos de prueba
+
+Si querés empezar con un usuario y tareas de ejemplo ya creados, ejecutá el seed después de migrar:
 
 ```bash
-npm run prisma:generate
+npm run prisma:seed
 ```
+
+Esto crea:
+
+- **Usuario:** `demo@example.com` / contraseña: `password123`
+- **5 tareas** asignadas a ese usuario (2 completadas, 3 pendientes)
+
+> El seed borra y recrea los datos cada vez que se corre, así que no genera duplicados.
 
 ### 6. Correr el backend
 
@@ -104,7 +111,7 @@ npm run start:dev
 
 La API queda disponible en:
 
-```text
+```
 http://localhost:3000
 ```
 
@@ -175,9 +182,3 @@ http://localhost:5173
 ├── docker-compose.yml
 └── README.md
 ```
-
-## Notas de seguridad
-
-El proyecto implementa SHA-256 con salt porque fue solicitado como requisito. Para una aplicación productiva se recomienda usar algoritmos diseñados para contraseñas como Argon2, bcrypt o scrypt.
-
-El valor de `JWT_SECRET` debe ser largo, privado y distinto por entorno. No subas archivos `.env` reales al repositorio.
