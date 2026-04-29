@@ -155,7 +155,7 @@ http://localhost:5173
 
 ## Estructura del repositorio
 
-```text
+```
 .
 ├── backend/
 │   ├── prisma/

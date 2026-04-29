@@ -131,7 +131,7 @@ export function Tasks() {
               onClick={handleNewTask}
               className="rounded-lg bg-sky-600 px-4 py-2 font-medium text-white transition hover:bg-sky-700"
             >
-              Nueva Tarea
+              Nueva tarea
             </button>
             <button
               type="button"
